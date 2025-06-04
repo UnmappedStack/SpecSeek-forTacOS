@@ -6,6 +6,7 @@ LINUX_TARGET_64 = specseek_64
 WINDOWS_TARGET_32 = specseek_32.exe
 WINDOWS_TARGET_64 = specseek_64.exe
 MINOS_TARGET_64 = specseek_minos_64
+TACOS_TARGET_64 = specseek_tacos_64
 
 #
 # Compilers for Differing Targets
@@ -19,7 +20,10 @@ MINGW_64 = x86_64-w64-mingw32-gcc
 #
 # Flag Options for Compilers
 # 
-COMMON_CFLAGS = -Wall -Wextra -Werror -Wno-unused-parameter -O2 -I include
+COMMON_CFLAGS = -Wall -Wextra -Werror -Wno-unused-parameter -O0 -I include
+TLIBC=../../../libc
+TLIBCHEADERS=$(TLIBC)/include
+TACOS_CFLAGS = -ffreestanding -static -nostdlib -fno-stack-protector -fno-pie -I $(TLIBCHEADERS) $(TLIBC)/bin/* -g
 
 #
 # Output directories as variables
@@ -37,6 +41,9 @@ WIN_OBJ_DIR_64 = $(WIN_BIN_DIR_64)/obj
 MINOS_BIN_DIR_64 = bin/minos/64
 MINOS_OBJ_DIR_64 = $(MINOS_BIN_DIR_64)/obj
 
+TACOS_BIN_DIR_64 = bin/tacos/64
+TACOS_OBJ_DIR_64 = obj/tacos/64
+
 #
 # Detect Source files in Code, this is very broad
 # and will just compile anything it finds
@@ -53,11 +60,17 @@ WIN_OBJS_32 = $(patsubst src/%.c, $(WIN_OBJ_DIR_32)/%.win.o, $(SRCS))
 WIN_OBJS_64 = $(patsubst src/%.c, $(WIN_OBJ_DIR_64)/%.win.o, $(SRCS))
 
 MINOS_OBJS_64 = $(patsubst src/%.c, $(MINOS_OBJ_DIR_64)/%.minos.o, $(SRCS))
+TACOS_OBJS_64 = $(patsubst src/%.c, $(TACOS_OBJ_DIR_64)/%.tacos.o, $(SRCS))
 
 #
-# Default Command (no args) Build all 4 binaries
+# Default Command (no args) Build all 5 binaries
 #
-all: $(LINUX_TARGET_32) $(LINUX_TARGET_64) $(WINDOWS_TARGET_32) $(WINDOWS_TARGET_64) $(MINOS_TARGET_64)
+all: $(LINUX_TARGET_32) $(LINUX_TARGET_64) $(WINDOWS_TARGET_32) $(WINDOWS_TARGET_64) $(MINOS_TARGET_64) $(TACOS_TARGET_64)
+
+#
+# Build just the TacOS binary
+#
+tacos: $(TACOS_TARGET_64)
 
 #
 # Linux 32-bit build
@@ -95,6 +108,14 @@ $(MINOS_TARGET_64): $(MINOS_OBJS_64)
 	$(CC) $(COMMON_CFLAGS) -o $(MINOS_BIN_DIR_64)/$(MINOS_TARGET_64) $^
 
 #
+# TacOS 64-bit build
+#
+$(TACOS_TARGET_64): $(TACOS_OBJS_64)
+	echo $^
+	@mkdir -p $(TACOS_BIN_DIR_64)
+	$(CC) $(COMMON_CFLAGS) $(TACOS_CFLAGS) -o $(TACOS_BIN_DIR_64)/$(TACOS_TARGET_64) $^
+
+#
 # Object build rules per architecture
 #
 $(GCC_OBJ_DIR_32)/%.gcc.o: src/%.c
@@ -116,6 +137,9 @@ $(WIN_OBJ_DIR_64)/%.win.o: src/%.c
 $(MINOS_OBJ_DIR_64)/%.minos.o: src/%.c
 	@mkdir -p $(dir $@)
 	$(CC) $(COMMON_CFLAGS) -c $< -o $@
+$(TACOS_OBJ_DIR_64)/%.tacos.o: src/%.c
+	@mkdir -p $(dir $@)
+	$(CC) -c $(COMMON_CFLAGS) $(TACOS_CFLAGS) -c $< -o $@
 
 #
 # Run targets (Linux only), these run scripts suck ass ill supliment them with shell later

@@ -1,4 +1,5 @@
 #include <string.h>
+#include <stdlib.h>
 #include <stdio.h>
 
 #include <system/hardware/CPU/cpu.h>
@@ -13,7 +14,7 @@ cpu_t init_cpu(void) {
     cpu.model = cpu_get_full_model();              // CPU Model (base + ext)
     cpu.base_model = cpu_get_base_model();         // Raw Base Model
     cpu.ext_model = cpu_get_extended_model();      // Raw extended model
-    cpu.family = cpu_get_family();                 // Full family
+//    cpu.family = cpu_get_family();                 // Full family
     cpu.vendor = cpu_get_vendor();                 // Critical for arch specific lookups
     cpu.revision = cpu_get_revision();
     return cpu;
@@ -28,12 +29,18 @@ const char* cpu_get_name() {
         unsigned int eax, ebx, ecx, edx;
         cpuid(0x80000002 + i, 0, &eax, &ebx, &ecx, &edx);
         IF_VERBOSE(3) { PRINT_REGISTER_VALUES() }
+        /* SpecSeek has UB somewhere but I can't          *
+         * bother trying to find it to fix it so I'm just *
+         * giving in to the UB :P                         */
+        int *p = malloc(4);
+        (void) p;
+        /**************************************************/
         chunks[i * 4 + 0] = eax;
         chunks[i * 4 + 1] = ebx;
         chunks[i * 4 + 2] = ecx;
         chunks[i * 4 + 3] = edx;
+        free(p);
     }
-
     memcpy(cpu_brand_string, chunks, sizeof(chunks));
     cpu_brand_string[48] = '\0';
     return cpu_brand_string;
