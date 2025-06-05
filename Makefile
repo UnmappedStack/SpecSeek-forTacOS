@@ -17,13 +17,13 @@ CC ?= gcc
 MINGW_32 = i686-w64-mingw32-gcc
 MINGW_64 = x86_64-w64-mingw32-gcc
 
+TACOCC = tacos-gcc-x86_64
+
 #
 # Flag Options for Compilers
 # 
 COMMON_CFLAGS = -Wall -Wextra -Werror -Wno-unused-parameter -O0 -I include
-TLIBC=../../../libc
-TLIBCHEADERS=$(TLIBC)/include
-TACOS_CFLAGS = -ffreestanding -static -nostdlib -fno-stack-protector -fno-pie -I $(TLIBCHEADERS) $(TLIBC)/bin/* -g
+TACOS_CFLAGS = -static -fno-pie -g
 
 #
 # Output directories as variables
@@ -113,7 +113,7 @@ $(MINOS_TARGET_64): $(MINOS_OBJS_64)
 $(TACOS_TARGET_64): $(TACOS_OBJS_64)
 	echo $^
 	@mkdir -p $(TACOS_BIN_DIR_64)
-	$(CC) $(COMMON_CFLAGS) $(TACOS_CFLAGS) -o $(TACOS_BIN_DIR_64)/$(TACOS_TARGET_64) $^
+	$(TACOCC) $(COMMON_CFLAGS) $(TACOS_CFLAGS) -o $(TACOS_BIN_DIR_64)/$(TACOS_TARGET_64) $^
 
 #
 # Object build rules per architecture
@@ -139,7 +139,7 @@ $(MINOS_OBJ_DIR_64)/%.minos.o: src/%.c
 	$(CC) $(COMMON_CFLAGS) -c $< -o $@
 $(TACOS_OBJ_DIR_64)/%.tacos.o: src/%.c
 	@mkdir -p $(dir $@)
-	$(CC) -c $(COMMON_CFLAGS) $(TACOS_CFLAGS) -c $< -o $@
+	$(TACOCC) -c $(COMMON_CFLAGS) $(TACOS_CFLAGS) -c $< -o $@
 
 #
 # Run targets (Linux only), these run scripts suck ass ill supliment them with shell later
